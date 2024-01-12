@@ -22,22 +22,21 @@ class HomeController extends AbstractController
     }
 
 
-
     #[Route('/category/update/{id}', name: 'category_update')]
     #[Route('/category/create', name: 'category_create')]
-    public function category_create(Request $request, EntityManagerInterface $manager, CategoryRepository $repository, $id=null): Response
+    public function category_create(Request $request, EntityManagerInterface $manager, CategoryRepository $repository, $id = null): Response
     {
         // cette méthode a pour but de créer une nouvelle catégorie.
         // préalablement à cette méthode nous avons configurés les contraintes dans l'entité et configuré les champs de formulaire dans le type (dans le dossier form de src)
         // il nous faudra donc un formulaire, une condition de soumission de formulaire et enfin une méthode pour insérer en table de BDD.
 
         if (!$id):
-        // créer une catégorie pour la create
-        $category = new Category();
+            // créer une catégorie pour la create
+            $category = new Category();
         else:
-        // récupérer une catégorie pour la update
-        $category=$repository->find($id);
-       endif;
+            // récupérer une catégorie pour la update
+            $category = $repository->find($id);
+        endif;
         // création du formulaire
         // La méthode createForm() génère un objet de formulaire, elle attend plusieurs arguments:
         //1er: Le formulaire que l'on souhaite créé (automatiquement un des types existant dans le dossier Form)
@@ -82,15 +81,28 @@ class HomeController extends AbstractController
         // pour toutes requêtes de selection (récupération de données en BDD)
         // il faudra injecter en dé^pendance le Repository concerné
 
-        $categories=$repository->findAll();
+        $categories = $repository->findAll();
         dump($categories);
         //on renvoi à la vue le jeu de résultat
 
 
-
         return $this->render('home/category_list.html.twig', [
-           'categories'=>$categories
+            'categories' => $categories
         ]);
+    }
+
+
+    #[Route('/category/delete/{id}', name: 'category_delete')]
+    public function category_delete(Category $category, EntityManagerInterface $manager): Response
+    {
+        // lorsqu'on passe un parametre id dans une route et que l'on injecte en dépendance une entité il est inutile d'appeler le repository sur sa méthode find(), ici $category est déjà remplie de ses données
+        // on prepare la requete de suppression avec le manager
+        $manager->remove($category);
+
+        //on execute
+        $manager->flush();
+
+        return $this->redirectToRoute('category_list');
     }
 
 
